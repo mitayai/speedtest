@@ -98,7 +98,7 @@ def get_sample():
         result_id,
         result_url,
         result_persisted
-            FROM log where timestamp = :timestamp)
+            FROM log where timestamp = :timestamp
             LIMIT 0,1
     """,max_timestamp)
     data = db.cursor().fetchone()
