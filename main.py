@@ -67,6 +67,9 @@ def db(forceinit=False):
 
 def get_sample():
     logging.debug("Getting sample")
+    db().cursor().execute("select timestamp from log order by timestamp desc limit 0,1")
+    max_timestamp = db().cursor().fetchone()
+    logging.debug("Max timestamp: {}".format(max_timestamp))
     db().cursor().execute("""SELECT
         type,
         timestamp,
@@ -95,9 +98,9 @@ def get_sample():
         result_id,
         result_url,
         result_persisted
-            FROM log where timestamp = max(select timestamp from log)
+            FROM log where timestamp = :timestamp)
             LIMIT 0,1
-    """)
+    """,max_timestamp)
     data = db.cursor().fetchone()
     logging.debug("Sample: {}".format(data))
     return data
