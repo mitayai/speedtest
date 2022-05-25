@@ -95,7 +95,7 @@ def get_sample():
         result_id,
         result_url,
         result_persisted
-            FROM log where timestamp = max(timestamp)
+            FROM log where timestamp = max(select timestamp from log)
             LIMIT 0,1
     """)
     data = db.cursor().fetchone()
