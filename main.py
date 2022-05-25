@@ -2,11 +2,15 @@
 
 """
 SpeedTest
+
+Put a speedtest binary in /home/pi/speedtest/
+
 """
 
 import os
 import json
 import sqlite3
+import logging
 
 # persistence
 _db = None
@@ -17,11 +21,13 @@ def db(forceinit=False):
 
     # Initialize database connection
     if _db is None:
+        logging.debug("Initializing db connection")
         _db = sqlite3.connect('/home/pi/speedtest/speedtest.db')
         forceinit = True
 
     # Initialize database table with a transaction
     if forceinit is True:
+        logging.debug("Initializing log table")
         _db.cursor().execute("""CREATE TABLE IF NOT EXISTS log (
             type text,
             timestamp text,
@@ -60,6 +66,7 @@ def db(forceinit=False):
 
 
 def get_sample():
+    logging.debug("Getting sample")
     db().cursor().execute("""SELECT
         type,
         timestamp,
@@ -91,7 +98,9 @@ def get_sample():
             FROM log where timestamp = max(timestamp)
             LIMIT 0,1
     """)
-    return db.cursor().fetchone
+    data = db.cursor().fetchone()
+    logging.debug("Sample: {}".format(data))
+    return data
 
 
 def record_sample():
@@ -100,10 +109,12 @@ def record_sample():
     # https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-armhf.tgz
 
     # create a pipe to a forked shell and run a commandin it
+    logging.debug("Executing speedtest binary")
     stream = os.popen('/home/pi/speedtest/speedtest -f json --output-header')
 
     # read the stream (stdout of the command we ran)
     output = stream.read()
+    logging.debug("Stream output: {}".format(output))
 
     # import the output to a python dictionary
     external_data = json.loads(output)
@@ -140,6 +151,7 @@ def record_sample():
     }
 
     # insert record
+    logging.debug("Inserting record")
     db().cursor().execute("""insert into log (
         type,
         timestamp,
@@ -204,4 +216,4 @@ def record_sample():
 
 if __name__ == '__main__':
     record_sample()
-    print(getsample())
+    print(get_sample())
